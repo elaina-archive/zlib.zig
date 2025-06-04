@@ -36,16 +36,19 @@ pub fn build(b: *std.Build) void {
 
     const zlib_dep = b.dependency("zlib", .{});
 
-    const zlib = std.Build.Step.Compile.create(b, .{
-        .name = "z",
-        .root_module = .{
+    const zlib = if (linkage == .static)
+        b.addStaticLibrary(.{
+            .name = "z",
             .target = target,
             .optimize = optimize,
-            .link_libc = true,
-        },
-        .kind = .lib,
-        .linkage = linkage,
-    });
+        })
+    else
+        b.addSharedLibrary(.{
+            .name = "z",
+            .target = target,
+            .optimize = optimize,
+        });
+    zlib.linkLibC();
 
     zlib.addCSourceFiles(.{
         .root = zlib_dep.path("."),
